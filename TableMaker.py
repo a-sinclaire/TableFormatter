@@ -231,10 +231,34 @@ def generate_df(input_string):
     return df
 
 
+def generate_glm(input_string):
+    data_lines = input_string.split('\n')
+    data = []
+    i = 0
+    while i < len(data_lines):
+        if data_lines[i].strip() == 'Coefficients:':  # in main data
+            i += 1
+            labels = ["Label", 'Estimate', 'Std.Error', 'z-value', 'Pr(>|z|)']
+            data.append(labels)
+            i += 1
+            break
+        i += 1
+    while i < len(data_lines):
+        if data_lines[i][0] == '-':
+            break
+        line = data_lines[i].split()
+        end = ''.join(line[4:])
+        data.append([line[0], line[1], line[2], line[3], end])
+        i += 1
+    data_lines = [';'.join(x) for x in data]
+    df = pd.read_csv(StringIO('\n'.join(data_lines)), delimiter=';')
+    return df
+
+
 def main():
     sg.theme('DarkAmber')
     layout = [[sg.Text('Enter data string:'), sg.InputText()],
-              [sg.Button('Generate'), sg.Button('Generate Stargazer')]]
+              [sg.Button('Generate'), sg.Button('Generate Stargazer'), sg.Button('Generate GLM')]]
     window = sg.Window('Table Maker', layout)
     df = None
     while True:
@@ -245,6 +269,8 @@ def main():
             df = generate_df(values[0])
         if event == 'Generate Stargazer':
             df = generate_df_stargazer(values[0])
+        if event == 'Generate GLM':
+            df = generate_glm(values[0])
         if df is not None:
             print(df)
             filename = sg.tk.filedialog.asksaveasfilename(
