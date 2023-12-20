@@ -168,7 +168,9 @@ def generate_df_stargazer(input_string):
             i += 1
             var_vals = re.findall(r'\(.\)', lines[i])
             num_variables = len(var_vals)
-            data.append(['Label'].extend([variable.join(x) for x in var_vals]))
+            labels = ['Label']
+            labels.extend([variable + ' ' + x for x in var_vals])
+            data.append(labels)
         if lines[i][0] == '-':  # now entering data
             i += 1
             while lines[i][0] != '=':
@@ -189,19 +191,27 @@ def generate_df_stargazer(input_string):
                     r = d.replace('*', '\\*').replace('.', '\\.')
                     # if re.match(r'\d+', r) is None:
                     #     continue
-                    matches = list(re.finditer(r, lines[i]))
-                    if len(matches) == 0:
-                        line_info.append((d, matches[0]))
+                    start = re.search(r, lines[i]).start()
+                    if start < 25:
+                        line_info.append(d)
+                    elif start < 35:
+                        while len(line_info) < 2:
+                            line_info.append('')
+                        line_info.append(d)
+                    elif start > 35:
+                        while len(line_info) < 3:
+                            line_info.append('')
+                        line_info.append(d)
                     else:
-                        # for i in range()
-                        try:
-                            line_info.append((d, matches[idx]))
-                        except:
-                            print(f'exception on {d}')
-                print(line_info)
+                        line_info.append('')
+                while len(line_info) < num_variables+1:
+                    line_info.append('')
+                data.append(line_info)
                 i += 1
         i += 1
-        # print(data)
+    data_lines = [';'.join(x) for x in data]
+    df = pd.read_csv(StringIO('\n'.join(data_lines)), delimiter=';')
+    return df
 
 
 def generate_df(input_string):
@@ -254,4 +264,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    # generate_df_stargazer(test_stargazer)
